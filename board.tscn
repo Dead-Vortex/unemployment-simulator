@@ -1,10 +1,10 @@
 [gd_scene load_steps=6 format=3 uid="uid://cpl5x5lr2dq8j"]
 
 [ext_resource type="Texture2D" uid="uid://dou25ajnljask" path="res://assets/board.png" id="1_p0ybc"]
-[ext_resource type="Texture2D" uid="uid://rh0k8v88w7x1" path="res://assets/goat.png" id="2_vf5bc"]
-[ext_resource type="Texture2D" uid="uid://b4erv2ufk2wog" path="res://assets/bag.png" id="3_mgc1s"]
-[ext_resource type="Texture2D" uid="uid://cv6ph77fd6ve" path="res://assets/cards.png" id="4_rq8yp"]
-[ext_resource type="Texture2D" uid="uid://dq3i5xvj52y8y" path="res://assets/milkcarton.png" id="5_tngv2"]
+[ext_resource type="Texture2D" uid="uid://c2ouets04080y" path="res://assets/pieces/goat.png" id="2_vf5bc"]
+[ext_resource type="Texture2D" uid="uid://cjxgqjuxv0sls" path="res://assets/pieces/bag.png" id="3_mgc1s"]
+[ext_resource type="Texture2D" uid="uid://b4qqanqnli8do" path="res://assets/pieces/cards.png" id="4_rq8yp"]
+[ext_resource type="Texture2D" uid="uid://b7x02s3fowr8c" path="res://assets/pieces/milkcarton.png" id="5_tngv2"]
 
 [node name="Node2D" type="Node2D"]
 
