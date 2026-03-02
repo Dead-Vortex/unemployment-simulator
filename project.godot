@@ -14,6 +14,7 @@ config/name="Unemployment Simulator Simulator"
 run/main_scene="uid://cpl5x5lr2dq8j"
 config/features=PackedStringArray("4.5", "GL Compatibility")
 config/icon="res://icon.svg"
+config/windows_native_icon="res://assets/icon.ico"
 
 [display]
 
