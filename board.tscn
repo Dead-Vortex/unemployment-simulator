@@ -1,6 +1,10 @@
-[gd_scene load_steps=2 format=3 uid="uid://cpl5x5lr2dq8j"]
+[gd_scene load_steps=6 format=3 uid="uid://cpl5x5lr2dq8j"]
 
 [ext_resource type="Texture2D" uid="uid://dou25ajnljask" path="res://assets/board.png" id="1_p0ybc"]
+[ext_resource type="Texture2D" uid="uid://rh0k8v88w7x1" path="res://assets/goat.png" id="2_vf5bc"]
+[ext_resource type="Texture2D" uid="uid://b4erv2ufk2wog" path="res://assets/bag.png" id="3_mgc1s"]
+[ext_resource type="Texture2D" uid="uid://cv6ph77fd6ve" path="res://assets/cards.png" id="4_rq8yp"]
+[ext_resource type="Texture2D" uid="uid://dq3i5xvj52y8y" path="res://assets/milkcarton.png" id="5_tngv2"]
 
 [node name="Node2D" type="Node2D"]
 
@@ -8,7 +12,7 @@
 texture = ExtResource("1_p0ybc")
 
 [node name="Camera2D" type="Camera2D" parent="."]
-position = Vector2(-235, 575)
+position = Vector2(-292, 598)
 ignore_rotation = false
 zoom = Vector2(0.75, 0.75)
 limit_left = -1000
@@ -16,3 +20,124 @@ limit_top = -1000
 limit_right = 1000
 limit_bottom = 1000
 limit_smoothed = true
+
+[node name="BoardSpaces" type="Node" parent="."]
+
+[node name="Space0" type="Node2D" parent="BoardSpaces"]
+position = Vector2(-810, 810)
+
+[node name="Space1" type="Node2D" parent="BoardSpaces"]
+position = Vector2(-810, 520)
+
+[node name="Space2" type="Node2D" parent="BoardSpaces"]
+position = Vector2(-810, 315)
+
+[node name="Space3" type="Node2D" parent="BoardSpaces"]
+position = Vector2(-810, 105)
+
+[node name="Space4" type="Node2D" parent="BoardSpaces"]
+position = Vector2(-810, -105)
+
+[node name="Space5" type="Node2D" parent="BoardSpaces"]
+position = Vector2(-810, -310)
+
+[node name="Space6" type="Node2D" parent="BoardSpaces"]
+position = Vector2(-810, -520)
+
+[node name="Space7" type="Node2D" parent="BoardSpaces"]
+position = Vector2(-810, -810)
+
+[node name="Space8" type="Node2D" parent="BoardSpaces"]
+position = Vector2(-525, -810)
+
+[node name="Space9" type="Node2D" parent="BoardSpaces"]
+position = Vector2(-315, -810)
+
+[node name="Space10" type="Node2D" parent="BoardSpaces"]
+position = Vector2(-110, -810)
+
+[node name="Space11" type="Node2D" parent="BoardSpaces"]
+position = Vector2(105, -810)
+
+[node name="Space12" type="Node2D" parent="BoardSpaces"]
+position = Vector2(305, -810)
+
+[node name="Space13" type="Node2D" parent="BoardSpaces"]
+position = Vector2(510, -810)
+
+[node name="Space14" type="Node2D" parent="BoardSpaces"]
+position = Vector2(930, -940)
+
+[node name="Jail" type="Node2D" parent="BoardSpaces"]
+position = Vector2(750, -760)
+
+[node name="Space15" type="Node2D" parent="BoardSpaces"]
+position = Vector2(805, -515)
+
+[node name="Space16" type="Node2D" parent="BoardSpaces"]
+position = Vector2(805, -315)
+
+[node name="Space17" type="Node2D" parent="BoardSpaces"]
+position = Vector2(805, -105)
+
+[node name="Space18" type="Node2D" parent="BoardSpaces"]
+position = Vector2(805, 100)
+
+[node name="Space19" type="Node2D" parent="BoardSpaces"]
+position = Vector2(805, 310)
+
+[node name="Space20" type="Node2D" parent="BoardSpaces"]
+position = Vector2(805, 515)
+
+[node name="Space21" type="Node2D" parent="BoardSpaces"]
+position = Vector2(805, 810)
+
+[node name="Space22" type="Node2D" parent="BoardSpaces"]
+position = Vector2(515, 810)
+
+[node name="Space23" type="Node2D" parent="BoardSpaces"]
+position = Vector2(305, 810)
+
+[node name="Space24" type="Node2D" parent="BoardSpaces"]
+position = Vector2(100, 810)
+
+[node name="Space25" type="Node2D" parent="BoardSpaces"]
+position = Vector2(-110, 810)
+
+[node name="Space26" type="Node2D" parent="BoardSpaces"]
+position = Vector2(-315, 810)
+
+[node name="Space27" type="Node2D" parent="BoardSpaces"]
+position = Vector2(-525, 810)
+
+[node name="Goat" type="Node2D" parent="."]
+position = Vector2(-872, 838)
+
+[node name="Sprite2D" type="Sprite2D" parent="Goat"]
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("2_vf5bc")
+offset = Vector2(10, 45)
+
+[node name="Bag" type="Node2D" parent="."]
+position = Vector2(-711, 874)
+
+[node name="Sprite2D" type="Sprite2D" parent="Bag"]
+position = Vector2(-2.9999998, 12.999999)
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("3_mgc1s")
+
+[node name="Cards" type="Node2D" parent="."]
+position = Vector2(-886, 681)
+
+[node name="Sprite2D" type="Sprite2D" parent="Cards"]
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("4_rq8yp")
+offset = Vector2(-20, 35)
+
+[node name="Milk" type="Node2D" parent="."]
+position = Vector2(-716, 731)
+
+[node name="Sprite2D" type="Sprite2D" parent="Milk"]
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("5_tngv2")
+offset = Vector2(-20, 0)
