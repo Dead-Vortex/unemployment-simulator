@@ -208,3 +208,8 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 23
 disabled = true
 text = "Consume a Drug (0)"
+
+[connection signal="pressed" from="CanvasLayer/PanelContainer/VBoxContainer/Dice" to="." method="_on_dice_roll_button_pressed"]
+[connection signal="pressed" from="CanvasLayer/PanelContainer/VBoxContainer/BuySadMeal" to="." method="_on_buy_sad_meal_button_pressed"]
+[connection signal="pressed" from="CanvasLayer/PanelContainer/VBoxContainer/SadMeal" to="." method="_on_eat_sad_meal_pressed"]
+[connection signal="pressed" from="CanvasLayer/PanelContainer/VBoxContainer/Drug" to="." method="_on_use_drug_pressed"]
