@@ -1,18 +1,18 @@
-[gd_scene load_steps=10 format=3 uid="uid://cpl5x5lr2dq8j"]
+[gd_scene load_steps=9 format=3 uid="uid://cpl5x5lr2dq8j"]
 
 [ext_resource type="Texture2D" uid="uid://dou25ajnljask" path="res://assets/board.png" id="1_p0ybc"]
-[ext_resource type="Script" uid="uid://dmdpmwxcv7w23" path="res://scripts/camera_2d.gd" id="2_mgc1s"]
-[ext_resource type="Texture2D" uid="uid://rh0k8v88w7x1" path="res://assets/goat.png" id="2_vf5bc"]
-[ext_resource type="Texture2D" uid="uid://b4erv2ufk2wog" path="res://assets/bag.png" id="3_mgc1s"]
-[ext_resource type="Texture2D" uid="uid://cv6ph77fd6ve" path="res://assets/cards.png" id="4_rq8yp"]
-[ext_resource type="Texture2D" uid="uid://dq3i5xvj52y8y" path="res://assets/milkcarton.png" id="5_tngv2"]
+[ext_resource type="Script" uid="uid://dvbsy46o50q1j" path="res://scripts/game.gd" id="1_rq8yp"]
+[ext_resource type="Texture2D" uid="uid://c2ouets04080y" path="res://assets/pieces/goat.png" id="2_vf5bc"]
+[ext_resource type="Texture2D" uid="uid://cjxgqjuxv0sls" path="res://assets/pieces/bag.png" id="3_mgc1s"]
+[ext_resource type="Texture2D" uid="uid://b4qqanqnli8do" path="res://assets/pieces/cards.png" id="4_rq8yp"]
+[ext_resource type="Texture2D" uid="uid://b7x02s3fowr8c" path="res://assets/pieces/milkcarton.png" id="5_tngv2"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_vf5bc"]
 bg_color = Color(0.1, 0.1, 0.1, 0.6)
-corner_radius_top_left = 50
-corner_radius_top_right = 50
-corner_radius_bottom_right = 50
-corner_radius_bottom_left = 50
+corner_radius_top_left = 25
+corner_radius_top_right = 25
+corner_radius_bottom_right = 25
+corner_radius_bottom_left = 25
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_mgc1s"]
 bg_color = Color(0.1, 0.1, 0.1, 0.6)
@@ -21,14 +21,8 @@ corner_radius_top_right = 15
 corner_radius_bottom_right = 15
 corner_radius_bottom_left = 15
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_rq8yp"]
-bg_color = Color(0.1, 0.1, 0.1, 0.6)
-corner_radius_top_left = 3
-corner_radius_top_right = 3
-corner_radius_bottom_right = 10
-corner_radius_bottom_left = 10
-
 [node name="Node2D" type="Node2D"]
+script = ExtResource("1_rq8yp")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 texture = ExtResource("1_p0ybc")
@@ -41,7 +35,6 @@ limit_top = -1000
 limit_right = 1000
 limit_bottom = 1000
 limit_smoothed = true
-script = ExtResource("2_mgc1s")
 
 [node name="BoardSpaces" type="Node" parent="."]
 
@@ -164,29 +157,29 @@ texture = ExtResource("5_tngv2")
 offset = Vector2(-20, 0)
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
-scale = Vector2(1.25, 1.25)
-transform = Transform2D(1.25, 0, 0, 1.25, 0, 0)
-follow_viewport_enabled = true
-follow_viewport_scale = 1.25
+scale = Vector2(0.6, 0.6)
+transform = Transform2D(0.6, 0, 0, 0.6, 0, 0)
 
 [node name="PanelContainer" type="PanelContainer" parent="CanvasLayer"]
 anchors_preset = -1
-anchor_right = 0.27800003
-anchor_bottom = 0.57100004
-offset_left = -81.0
-offset_top = 150.0
-offset_right = 80.74396
-offset_bottom = 92.99191
+anchor_left = -0.07
+anchor_top = 0.231
+anchor_right = 0.45400003
+anchor_bottom = 0.80300003
+offset_left = 1380.64
+offset_top = 550.312
+offset_right = 1376.9954
+offset_bottom = 545.656
 theme_override_styles/panel = SubResource("StyleBoxFlat_vf5bc")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/PanelContainer"]
 layout_mode = 2
 
 [node name="StatusLabel" type="RichTextLabel" parent="CanvasLayer/PanelContainer/VBoxContainer"]
-custom_minimum_size = Vector2(0, 115)
+custom_minimum_size = Vector2(0, 154.24)
 layout_mode = 2
-theme_override_font_sizes/normal_font_size = 26
-text = "Player 1 - $10
+theme_override_font_sizes/normal_font_size = 35
+text = "Goat - $10
 Hunger: 0/10
 Inebriation: 0/10"
 horizontal_alignment = 1
@@ -195,21 +188,23 @@ vertical_alignment = 1
 [node name="Dice" type="Button" parent="CanvasLayer/PanelContainer/VBoxContainer"]
 custom_minimum_size = Vector2(0, 57.7)
 layout_mode = 2
-theme_override_font_sizes/font_size = 35
+theme_override_font_sizes/font_size = 55
 theme_override_styles/normal = SubResource("StyleBoxFlat_mgc1s")
 text = "Roll Die"
 
 [node name="BuySadMeal" type="Button" parent="CanvasLayer/PanelContainer/VBoxContainer"]
 layout_mode = 2
+theme_override_font_sizes/font_size = 23
 text = "Buy a Sad Meal™ ($5)"
 
 [node name="SadMeal" type="Button" parent="CanvasLayer/PanelContainer/VBoxContainer"]
 layout_mode = 2
+theme_override_font_sizes/font_size = 23
 text = "Consume a Sad Meal™ (1)"
 
 [node name="Drug" type="Button" parent="CanvasLayer/PanelContainer/VBoxContainer"]
 custom_minimum_size = Vector2(0, 27.45)
 layout_mode = 2
-theme_override_styles/normal = SubResource("StyleBoxFlat_rq8yp")
+theme_override_font_sizes/font_size = 23
 disabled = true
 text = "Consume a Drug (0)"

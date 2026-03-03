@@ -1,0 +1,142 @@
+extends Node2D
+
+@onready var camera : Camera2D = $Camera2D
+
+# Player Pieces
+@onready var player1 = $Goat
+@onready var player2 = $Bag
+@onready var player3 = $Cards
+@onready var player4 = $Milk
+var player_piece_names : Dictionary = {1: "Goat", 2: "Bag", 3: "Cards", 4: "Milk"}
+
+# UI
+@onready var status_label = $CanvasLayer/PanelContainer/VBoxContainer/StatusLabel
+@onready var die_button = $CanvasLayer/PanelContainer/VBoxContainer/Dice
+@onready var purchase_sad_meal_button = $CanvasLayer/PanelContainer/VBoxContainer/BuySadMeal
+@onready var eat_sad_meal_button = $CanvasLayer/PanelContainer/VBoxContainer/SadMeal
+@onready var rhymes_with_grug_button = $CanvasLayer/PanelContainer/VBoxContainer/Drug
+
+var player_stats : Array = [
+	{"money": 10, "hunger": 0, "inebriation": 0, "sadmeals": 1, "drugs": 0},
+	{"money": 10, "hunger": 0, "inebriation": 0, "sadmeals": 1, "drugs": 0},
+	{"money": 10, "hunger": 0, "inebriation": 0, "sadmeals": 1, "drugs": 0},
+	{"money": 10, "hunger": 0, "inebriation": 0, "sadmeals": 1, "drugs": 0}
+]
+
+# Board Spaces
+var police_inspection_spaces : Array = [1, 10, 13, 17, 19, 25]
+var dark_alleyway_spaces : Array = [4, 8, 12, 16, 20, 23, 26]
+var heist_spaces : Array = [3, 6, 9, 27]
+var npc_spaces : Array = [5, 11, 15, 18, 22, 24]
+# Start - 0
+# Unemployment Tax - 2
+# Casino - 7
+# Just Visiting - 14
+# Bar - 21
+
+func _ready() -> void:
+	game_turn(1)
+
+func _process(delta: float) -> void:
+	camera.offset += Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down") * 1000 * delta
+
+func game_turn(player):
+	status_label.text = player_piece_names[player] + " - $" + str(player_stats[player - 1]["money"]) + "\nHunger: " + str(player_stats[player - 1]["hunger"]) + "/10\nInebriation: " + str(player_stats[player - 1]["inebriation"]) + "/10"
+	die_button.text = "Roll Die"
+	die_button.disabled = false
+	if player_stats[player - 1]["money"] < 5:
+		purchase_sad_meal_button.disabled = true
+	else:
+		purchase_sad_meal_button.disabled = false
+	eat_sad_meal_button.text = "Consume a Sad Meal™️ (" + str(player_stats[player - 1]["sadmeals"]) + ")"
+	if player_stats[player - 1]["sadmeals"] <= 0:
+		eat_sad_meal_button.disabled = true
+	else:
+		eat_sad_meal_button.disabled = false
+	rhymes_with_grug_button.text = "Consume a Drug (" + str(player_stats[player - 1]["drugs"]) + ")"
+	if player_stats[player - 1]["drugs"] <= 0:
+		rhymes_with_grug_button.disabled = true
+	else:
+		rhymes_with_grug_button.disabled = false
+
+
+
+
+## Player 1
+#var player1_money : int = 10
+#var player1_hunger : int = 0
+#var player1_inebriation : int = 0
+#var player1_sadmeals : int = 1
+#var player1_drugs : int = 0
+#var player1_space : int = 0
+#
+## Player 2
+#var player2_money : int = 10
+#var player2_hunger : int = 0
+#var player2_inebriation : int = 0
+#var player2_sadmeals : int = 1
+#var player2_drugs : int = 0
+#var player2_space : int = 0
+#
+## Player 3
+#var player3_money : int = 10
+#var player3_hunger : int = 0
+#var player3_inebriation : int = 0
+#var player3_sadmeals : int = 1
+#var player3_drugs : int = 0
+#var player3_space : int = 0
+#
+## Player 4
+#var player4_money : int = 10
+#var player4_hunger : int = 0
+#var player4_inebriation : int = 0
+#var player4_sadmeals : int = 1
+#var player4_drugs : int = 0
+#var player4_space : int = 0
+
+#func get_player_stat(stat : String, player : int):
+	#if stat == "money":
+		#if player == 1:
+			#return player1_money
+		#elif player == 2:
+			#return player2_money
+		#elif player == 3:
+			#return player3_money
+		#elif player == 4:
+			#return player4_money
+	#elif stat == "hunger":
+		#if player == 1:
+			#return player1_hunger
+		#elif player == 2:
+			#return player2_hunger
+		#elif player == 3:
+			#return player3_hunger
+		#elif player == 4:
+			#return player4_hunger
+	#elif stat == "inebriation":
+		#if player == 1:
+			#return player1_inebriation
+		#elif player == 2:
+			#return player2_inebriation
+		#elif player == 3:
+			#return player3_inebriation
+		#elif player == 4:
+			#return player4_inebriation
+	#elif stat == "sadmeals":
+		#if player == 1:
+			#return player1_sadmeals
+		#elif player == 2:
+			#return player2_sadmeals
+		#elif player == 3:
+			#return player3_sadmeals
+		#elif player == 4:
+			#return player4_sadmeals
+	#elif stat == "drugs":
+		#if player == 1:
+			#return player1_drugs
+		#elif player == 2:
+			#return player2_drugs
+		#elif player == 3:
+			#return player3_drugs
+		#elif player == 4:
+			#return player4_drugs
