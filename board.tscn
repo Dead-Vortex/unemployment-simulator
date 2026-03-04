@@ -193,7 +193,7 @@ custom_minimum_size = Vector2(0, 57.7)
 layout_mode = 2
 theme_override_font_sizes/font_size = 55
 theme_override_styles/normal = SubResource("StyleBoxFlat_mgc1s")
-text = "Roll Die"
+text = "Player has drugs, go to jail"
 
 [node name="BuySadMeal" type="Button" parent="CanvasLayer/PanelContainer/VBoxContainer"]
 layout_mode = 2

@@ -65,6 +65,10 @@ func game_turn(player):
 	current_player = player
 	# Initialize UI
 	die_button.disabled = false
+	player_stats[player - 1]["hunger"] += 1
+	player_stats[player - 1]["inebriation"] -= 1
+	if player_stats[player - 1]["inebriation"] < 0:
+		player_stats[player - 1]["inebriation"] = 0
 	update_ui()
 	# Die Roll
 	await(die_rolled)
@@ -84,6 +88,29 @@ func game_turn(player):
 	# Board Space Actions
 	if police_inspection_spaces.has(player_stats[player - 1]["space"]):
 		print(player_piece_names[player] + " landed on Police Inspection")
+		die_button.text = "Roll Die"
+		die_button.disabled = false
+		await(die_rolled)
+		die_button.disabled = true
+		for i in 10:
+			die_roll = randi_range(1, 6)
+			die_button.text = str(die_roll)
+			await get_tree().create_timer(0.2).timeout
+		await get_tree().create_timer(0.5).timeout
+		if (die_roll == 2 or die_roll == 3) and player_stats[player - 1]["drugs"] > 0:
+			die_button.text = "Player has drugs, go to jail"
+		elif die_roll == 4 or die_roll == 5:
+			if player_stats[player - 1]["inebriation"] >= 4:
+				pass # go to jail
+			else:
+				move_player_spaces(player, -2)
+		elif die_roll == 6:
+			if player_stats[player - 1]["money"] >= 10:
+				player_stats[player - 1]["money"] -= 10
+			else:
+				pass # go to jail
+		await get_tree().create_timer(0.8).timeout
+			
 	elif dark_alleyway_spaces.has(player_stats[player - 1]["space"]):
 		print(player_piece_names[player] + " landed on Dark Alleyway")
 	elif heist_spaces.has(player_stats[player - 1]["space"]):
@@ -120,12 +147,20 @@ func update_ui():
 		rhymes_with_grug_button.disabled = false
 
 func move_player_spaces(player : int, spaces : int):
-	for i in spaces:
-		player_stats[player - 1]["space"] += 1
-		if player_stats[player - 1]["space"] > 27 and player_stats[player - 1]["space"] != 99:
-			player_stats[player - 1]["space"] = 0
-		get_node(player_piece_names[player]).global_position = get_node("BoardSpaces/Space" + str(player_stats[player - 1]["space"])).global_position
-		await get_tree().create_timer(0.5).timeout
+	if spaces > 0:
+		for i in spaces:
+			player_stats[player - 1]["space"] += 1
+			if player_stats[player - 1]["space"] > 27 and player_stats[player - 1]["space"] != 99:
+				player_stats[player - 1]["space"] = 0
+			get_node(player_piece_names[player]).global_position = get_node("BoardSpaces/Space" + str(player_stats[player - 1]["space"])).global_position
+			await get_tree().create_timer(0.5).timeout
+	else:
+		for i in abs(spaces):
+			player_stats[player - 1]["space"] -= 1
+			if player_stats[player - 1]["space"] < 0 and player_stats[player - 1]["space"] != 99:
+				player_stats[player - 1]["space"] = 27
+			get_node(player_piece_names[player]).global_position = get_node("BoardSpaces/Space" + str(player_stats[player - 1]["space"])).global_position
+			await get_tree().create_timer(0.5).timeout
 
 func _on_dice_roll_button_pressed() -> void:
 	emit_signal("die_rolled")
