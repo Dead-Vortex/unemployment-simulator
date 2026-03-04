@@ -28,6 +28,7 @@ script = ExtResource("1_rq8yp")
 texture = ExtResource("1_p0ybc")
 
 [node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(-232, 568)
 ignore_rotation = false
 zoom = Vector2(0.75, 0.75)
 limit_left = -1000
@@ -35,6 +36,8 @@ limit_top = -1000
 limit_right = 1000
 limit_bottom = 1000
 limit_smoothed = true
+position_smoothing_enabled = true
+position_smoothing_speed = 30.0
 
 [node name="BoardSpaces" type="Node" parent="."]
 
