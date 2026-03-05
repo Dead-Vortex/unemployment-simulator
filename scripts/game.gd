@@ -23,10 +23,10 @@ signal die_rolled
 var die_roll : int = 2
 
 var player_stats : Array = [ # Self explanitory.
-	{"money": 10, "hunger": 0, "inebriation": 5, "sadmeals": 1, "drugs": 0, "space": 0},
-	{"money": 10, "hunger": 0, "inebriation": 0, "sadmeals": 1, "drugs": 0, "space": 0},
-	{"money": 10, "hunger": 0, "inebriation": 0, "sadmeals": 1, "drugs": 0, "space": 0},
-	{"money": 10, "hunger": 0, "inebriation": 0, "sadmeals": 1, "drugs": 0, "space": 0}
+	{"money": 10, "hunger": 0, "inebriation": 0, "sadmeals": 1, "drugs": 0, "space": 0, "alive": true},
+	{"money": 10, "hunger": 0, "inebriation": 0, "sadmeals": 1, "drugs": 0, "space": 0, "alive": true},
+	{"money": 10, "hunger": 0, "inebriation": 0, "sadmeals": 1, "drugs": 0, "space": 0, "alive": true},
+	{"money": 10, "hunger": 0, "inebriation": 0, "sadmeals": 1, "drugs": 0, "space": 0, "alive": true}
 ]
 
 # Board Spaces
@@ -41,11 +41,23 @@ var npc_spaces : Array = [5, 11, 15, 18, 22, 24]
 # Bar - 21
 
 func _ready() -> void:
+	if player_stats[0]["alive"] == false:
+		player1.visible = false
+	if player_stats[1]["alive"] == false:
+		player2.visible = false
+	if player_stats[2]["alive"] == false:
+		player3.visible = false
+	if player_stats[3]["alive"] == false:
+		player4.visible = false
 	while true:
-		await(game_turn(1))
-		await(game_turn(2))
-		await(game_turn(3))
-		await(game_turn(4))
+		if player_stats[0]["alive"] == true:
+			await(game_turn(1))
+		if player_stats[1]["alive"] == true:
+			await(game_turn(2))
+		if player_stats[2]["alive"] == true:
+			await(game_turn(3))
+		if player_stats[3]["alive"] == true:
+			await(game_turn(4))
 
 func _process(delta: float) -> void:
 	# Camera controls
@@ -60,6 +72,8 @@ func _process(delta: float) -> void:
 		camera.global_position.y = 568
 	elif camera.global_position.y < -568:
 		camera.global_position.y = -568
+		
+	#camera.zoom += Vector2(Input.get_axis("camera_zoom_out", "camera_zoom_in") * delta, Input.get_axis("camera_zoom_out", "camera_zoom_in") * delta)
 
 func game_turn(player):
 	current_player = player
@@ -69,6 +83,11 @@ func game_turn(player):
 	player_stats[player - 1]["inebriation"] -= 1
 	if player_stats[player - 1]["inebriation"] < 0:
 		player_stats[player - 1]["inebriation"] = 0
+	if player_stats[player - 1]["hunger"] >= 10 or player_stats[player - 1]["inebriation"] >= 10:
+		player_stats[player - 1]["alive"] = false
+		get_node(player_piece_names[player]).visible = false
+		print(player_piece_names[player] + " died!")
+		return
 	update_ui()
 	# Die Roll
 	await(die_rolled)
@@ -76,7 +95,7 @@ func game_turn(player):
 	purchase_sad_meal_button.disabled = true
 	eat_sad_meal_button.disabled = true
 	rhymes_with_grug_button.disabled = true
-	for i in 10:
+	for i in randi_range(6, 10):
 		if player_stats[player - 1]["inebriation"] >= 4:
 			die_roll = (randi_range(1, 6) + randi_range(1, 6))
 		else:
@@ -88,28 +107,39 @@ func game_turn(player):
 	# Board Space Actions
 	if police_inspection_spaces.has(player_stats[player - 1]["space"]):
 		print(player_piece_names[player] + " landed on Police Inspection")
-		die_button.text = "Roll Die"
+		die_button.text = "Roll Die (Police)"
 		die_button.disabled = false
 		await(die_rolled)
 		die_button.disabled = true
-		for i in 10:
+		for i in randi_range(6, 10):
 			die_roll = randi_range(1, 6)
 			die_button.text = str(die_roll)
 			await get_tree().create_timer(0.2).timeout
 		await get_tree().create_timer(0.5).timeout
-		if (die_roll == 2 or die_roll == 3) and player_stats[player - 1]["drugs"] > 0:
-			die_button.text = "Player has drugs, go to jail"
+		if die_roll == 1:
+			die_button.text = "Safe"
+		elif die_roll == 2 or die_roll == 3:
+			if player_stats[player - 1]["drugs"] > 0:
+				# go to jail
+				die_button.text = ">0 Drugs, Jail"
+			else:
+				die_button.text = "No Drugs, Safe"
 		elif die_roll == 4 or die_roll == 5:
 			if player_stats[player - 1]["inebriation"] >= 4:
-				pass # go to jail
+				# go to jail
+				die_button.text = "Inebriated, Jail"
 			else:
 				move_player_spaces(player, -2)
+				die_button.text = "Low Inebriation, Back 2"
 		elif die_roll == 6:
 			if player_stats[player - 1]["money"] >= 10:
 				player_stats[player - 1]["money"] -= 10
+				status_label.text = player_piece_names[current_player] + " - $" + str(player_stats[current_player - 1]["money"]) + "\nHunger: " + str(player_stats[current_player - 1]["hunger"]) + "/10\nInebriation: " + str(player_stats[current_player - 1]["inebriation"]) + "/10"
+				die_button.text = "Pay $10"
 			else:
-				pass # go to jail
-		await get_tree().create_timer(0.8).timeout
+				# go to jail
+				die_button.text = "<$10, Jail"
+		await get_tree().create_timer(2).timeout
 			
 	elif dark_alleyway_spaces.has(player_stats[player - 1]["space"]):
 		print(player_piece_names[player] + " landed on Dark Alleyway")
