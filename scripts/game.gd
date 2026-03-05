@@ -84,9 +84,7 @@ func game_turn(player):
 	if player_stats[player - 1]["inebriation"] < 0:
 		player_stats[player - 1]["inebriation"] = 0
 	if player_stats[player - 1]["hunger"] >= 10 or player_stats[player - 1]["inebriation"] >= 10:
-		player_stats[player - 1]["alive"] = false
-		get_node(player_piece_names[player]).visible = false
-		print(player_piece_names[player] + " died!")
+		eliminate_player(player)
 		return
 	update_ui()
 	# Die Roll
@@ -153,6 +151,15 @@ func game_turn(player):
 		print(player_piece_names[player] + " landed on Casino")
 	elif player_stats[player - 1]["space"] == 21:
 		print(player_piece_names[player] + " landed on Bar")
+		if player_stats[player - 1]["money"] >= 2:
+			player_stats[player - 1]["money"] -= 2
+		player_stats[player - 1]["inebriation"] += 3
+		if player_stats[player - 1]["inebriation"] >= 10:
+			eliminate_player(player)
+			return
+		else:
+			update_ui()
+			await get_tree().create_timer(1).timeout
 
 func update_ui():
 	status_label.text = player_piece_names[current_player] + " - $" + str(player_stats[current_player - 1]["money"]) + "\nHunger: " + str(player_stats[current_player - 1]["hunger"]) + "/10\nInebriation: " + str(player_stats[current_player - 1]["inebriation"]) + "/10"
@@ -191,6 +198,11 @@ func move_player_spaces(player : int, spaces : int):
 				player_stats[player - 1]["space"] = 27
 			get_node(player_piece_names[player]).global_position = get_node("BoardSpaces/Space" + str(player_stats[player - 1]["space"])).global_position
 			await get_tree().create_timer(0.5).timeout
+
+func eliminate_player(player):
+	player_stats[player - 1]["alive"] = false
+	get_node(player_piece_names[player]).visible = false
+	print(player_piece_names[player] + " died!")
 
 func _on_dice_roll_button_pressed() -> void:
 	emit_signal("die_rolled")
