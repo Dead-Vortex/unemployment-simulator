@@ -9,6 +9,7 @@ extends Node2D
 @onready var player4 = $Milk # these might be useless? if they are i will remove them (this is a reminder)
 var player_piece_names : Dictionary = {1: "Goat", 2: "Bag", 3: "Cards", 4: "Milk"}
 var current_player : int = 1
+var living_humans : int = 4
 
 # UI
 @onready var status_label = $CanvasLayer/PanelContainer/VBoxContainer/StatusLabel
@@ -17,16 +18,25 @@ var current_player : int = 1
 @onready var eat_sad_meal_button = $CanvasLayer/PanelContainer/VBoxContainer/SadMeal
 @onready var rhymes_with_grug_button = $CanvasLayer/PanelContainer/VBoxContainer/Drug # I have an idea!
 
+# Other shitty ui i needed for some bullshit
+@onready var second_ui = $CanvasLayer/SpaceUI
+@onready var second_ui_text_label = $CanvasLayer/SpaceUI/VBoxContainer/PoorTextLabel
+@onready var second_ui_button1 = $CanvasLayer/SpaceUI/VBoxContainer/Button1
+@onready var second_ui_button2 = $CanvasLayer/SpaceUI/VBoxContainer/Button2
+
 # Turn logic
 var before_turn : bool = true
 signal die_rolled
 var die_roll : int = 2
 
+var die_roll_jail1 : int = 1
+var die_roll_jail2 : int = 2
+
 var player_stats : Array = [ # Self explanitory.
-	{"money": 10, "hunger": 0, "inebriation": 0, "sadmeals": 1, "drugs": 0, "space": 0, "alive": true},
-	{"money": 10, "hunger": 0, "inebriation": 0, "sadmeals": 1, "drugs": 0, "space": 0, "alive": true},
-	{"money": 10, "hunger": 0, "inebriation": 0, "sadmeals": 1, "drugs": 0, "space": 0, "alive": true},
-	{"money": 10, "hunger": 0, "inebriation": 0, "sadmeals": 1, "drugs": 0, "space": 0, "alive": true}
+	{"money": 10, "hunger": 0, "inebriation": 0, "sadmeals": 1, "drugs": 0, "space": 0, "jail": 0, "alive": true},
+	{"money": 10, "hunger": 0, "inebriation": 0, "sadmeals": 1, "drugs": 0, "space": 0, "jail": 0, "alive": true},
+	{"money": 10, "hunger": 0, "inebriation": 0, "sadmeals": 1, "drugs": 0, "space": 0, "jail": 0, "alive": true},
+	{"money": 10, "hunger": 0, "inebriation": 0, "sadmeals": 1, "drugs": 0, "space": 0, "jail": 0, "alive": true}
 ]
 
 # Board Spaces
@@ -40,16 +50,28 @@ var npc_spaces : Array = [5, 11, 15, 18, 22, 24]
 # Just Visiting - 14
 # Bar - 21
 
+# Cards
+var dark_alleyway_cards : Array = [0, 0, 0, 0, 0, 1, 2, 2, 2, 1, 1, 1, 3, 3, 3, 4, 1, 1, 4, 4, 5, 5, 6, 6]
+var dark_alleyway_outcomes : Dictionary = {0: "Gain 1 Drug", 1: "Gain 1 Sad Meal", 2: "Gain 2 Drugs", 3: "Lose $1", 4: "Lose $5", 5: "Lose 1 Sad Meal", 6: "Lose 2 Drugs"}
+var dark_alleyway_card : int = 0
+
+var heist_cards : Array = [{"task": "Roll an odd number", "success": "Gain 3 Drugs", "fail": "Pay $2"}]
+var heist_card : int = 0
+
 func _ready() -> void:
 	if player_stats[0]["alive"] == false:
 		player1.visible = false
+		living_humans -= 1
 	if player_stats[1]["alive"] == false:
 		player2.visible = false
+		living_humans -= 1
 	if player_stats[2]["alive"] == false:
 		player3.visible = false
+		living_humans -= 1
 	if player_stats[3]["alive"] == false:
 		player4.visible = false
-	while true:
+		living_humans -= 1
+	while living_humans > 1:
 		if player_stats[0]["alive"] == true:
 			await(game_turn(1))
 		if player_stats[1]["alive"] == true:
@@ -79,89 +101,165 @@ func game_turn(player):
 	current_player = player
 	# Initialize UI
 	die_button.disabled = false
-	player_stats[player - 1]["hunger"] += 1
-	player_stats[player - 1]["inebriation"] -= 1
-	if player_stats[player - 1]["inebriation"] < 0:
-		player_stats[player - 1]["inebriation"] = 0
-	if player_stats[player - 1]["hunger"] >= 10 or player_stats[player - 1]["inebriation"] >= 10:
-		eliminate_player(player)
-		return
+	if player_stats[player - 1]["jail"] != -1:
+		player_stats[player - 1]["hunger"] += 1
+		player_stats[player - 1]["inebriation"] -= 1
+		if player_stats[player - 1]["inebriation"] < 0:
+			player_stats[player - 1]["inebriation"] = 0
+		if player_stats[player - 1]["hunger"] >= 10 or player_stats[player - 1]["inebriation"] >= 10:
+			eliminate_player(player)
+			return
+	else:
+		player_stats[player - 1]["jail"] = 0
 	update_ui()
-	# Die Roll
-	await(die_rolled)
-	die_button.disabled = true
-	purchase_sad_meal_button.disabled = true
-	eat_sad_meal_button.disabled = true
-	rhymes_with_grug_button.disabled = true
-	for i in randi_range(6, 10):
-		if player_stats[player - 1]["inebriation"] >= 4:
-			die_roll = (randi_range(1, 6) + randi_range(1, 6))
-		else:
-			die_roll = randi_range(1, 6)
-		die_button.text = str(die_roll)
-		await get_tree().create_timer(0.2).timeout
-	await get_tree().create_timer(0.5).timeout
-	await(move_player_spaces(player, die_roll))
-	# Board Space Actions
-	if police_inspection_spaces.has(player_stats[player - 1]["space"]):
-		print(player_piece_names[player] + " landed on Police Inspection")
-		die_button.text = "Roll Die (Police)"
-		die_button.disabled = false
+	if player_stats[player - 1]["jail"] == 0:
+		# Die Roll
 		await(die_rolled)
 		die_button.disabled = true
+		purchase_sad_meal_button.disabled = true
+		eat_sad_meal_button.disabled = true
+		rhymes_with_grug_button.disabled = true
 		for i in randi_range(6, 10):
-			die_roll = randi_range(1, 6)
+			if player_stats[player - 1]["inebriation"] >= 4:
+				die_roll = (randi_range(1, 6) + randi_range(1, 6))
+			else:
+				die_roll = randi_range(1, 6)
 			die_button.text = str(die_roll)
 			await get_tree().create_timer(0.2).timeout
 		await get_tree().create_timer(0.5).timeout
-		if die_roll == 1:
-			die_button.text = "Safe"
-		elif die_roll == 2 or die_roll == 3:
-			if player_stats[player - 1]["drugs"] > 0:
-				# go to jail
-				die_button.text = ">0 Drugs, Jail"
-			else:
-				die_button.text = "No Drugs, Safe"
-		elif die_roll == 4 or die_roll == 5:
-			if player_stats[player - 1]["inebriation"] >= 4:
-				# go to jail
-				die_button.text = "Inebriated, Jail"
-			else:
-				move_player_spaces(player, -2)
-				die_button.text = "Low Inebriation, Back 2"
-		elif die_roll == 6:
+		await(move_player_spaces(player, 4))
+		# Board Space Actions
+		if police_inspection_spaces.has(player_stats[player - 1]["space"]):
+			print(player_piece_names[player] + " landed on Police Inspection")
+			die_button.text = "Roll Die (Police)"
+			die_button.disabled = false
+			await(die_rolled)
+			die_button.disabled = true
+			for i in randi_range(6, 10):
+				die_roll = randi_range(1, 6)
+				die_button.text = str(die_roll)
+				await get_tree().create_timer(0.2).timeout
+			await get_tree().create_timer(0.5).timeout
+			if die_roll == 1:
+				die_button.text = "Safe"
+			elif die_roll == 2 or die_roll == 3:
+				if player_stats[player - 1]["drugs"] > 0:
+					# go to jail
+					die_button.text = ">0 Drugs, Jail"
+				else:
+					die_button.text = "No Drugs, Safe"
+			elif die_roll == 4 or die_roll == 5:
+				if player_stats[player - 1]["inebriation"] >= 4:
+					# go to jail
+					die_button.text = "Inebriated, Jail"
+				else:
+					move_player_spaces(player, -2)
+					die_button.text = "Low Inebriation, Back 2"
+			elif die_roll == 6:
+				if player_stats[player - 1]["money"] >= 10:
+					player_stats[player - 1]["money"] -= 10
+					status_label.text = player_piece_names[current_player] + " - $" + str(player_stats[current_player - 1]["money"]) + "\nHunger: " + str(player_stats[current_player - 1]["hunger"]) + "/10\nInebriation: " + str(player_stats[current_player - 1]["inebriation"]) + "/10"
+					die_button.text = "Pay $10"
+				else:
+					# go to jail
+					die_button.text = "<$10, Jail"
+			await get_tree().create_timer(2).timeout
+		elif dark_alleyway_spaces.has(player_stats[player - 1]["space"]):
+			print(player_piece_names[player] + " landed on Dark Alleyway")
+			die_button.text = "Draw Card"
+			die_button.disabled = false
+			await(die_rolled)
+			die_button.disabled = true
+			for i in randi_range(6, 10):
+				dark_alleyway_card = dark_alleyway_cards.pick_random()
+				die_button.text = str(dark_alleyway_outcomes[dark_alleyway_card])
+				await get_tree().create_timer(0.2).timeout
+			await get_tree().create_timer(0.8).timeout
+			if dark_alleyway_card == 0:
+				player_stats[player - 1]["drugs"] += 1
+			elif dark_alleyway_card == 1:
+				player_stats[player - 1]["sadmeals"] += 1
+			elif dark_alleyway_card == 2:
+				player_stats[player - 1]["drugs"] += 2
+			elif dark_alleyway_card == 3:
+				player_stats[player - 1]["money"] -= 1
+				if player_stats[player - 1]["money"] < 0:
+					player_stats[player - 1]["money"] = 0
+			elif dark_alleyway_card == 4:
+				player_stats[player - 1]["money"] -= 5
+				if player_stats[player - 1]["money"] < 0:
+					player_stats[player - 1]["money"] = 0
+			elif dark_alleyway_card == 5:
+				player_stats[player - 1]["sadmeals"] -= 1
+				if player_stats[player - 1]["sadmeals"] < 0:
+					player_stats[player - 1]["sadmeals"] = 0
+			elif dark_alleyway_card == 6:
+				player_stats[player - 1]["drugs"] -= 2
+				if player_stats[player - 1]["drugs"] < 0:
+					player_stats[player - 1]["drugs"] = 0
+		elif heist_spaces.has(player_stats[player - 1]["space"]):
+			print(player_piece_names[player] + " landed on Heist")
+			heist_card = randi_range(0, 9)
+			
+			second_ui.visible = true
+		elif npc_spaces.has(player_stats[player - 1]["space"]):
+			print(player_piece_names[player] + " landed on NPC")
+		elif player_stats[player - 1]["space"] == 2:
+			print(player_piece_names[player] + " landed on Unemployment Tax")
 			if player_stats[player - 1]["money"] >= 10:
 				player_stats[player - 1]["money"] -= 10
-				status_label.text = player_piece_names[current_player] + " - $" + str(player_stats[current_player - 1]["money"]) + "\nHunger: " + str(player_stats[current_player - 1]["hunger"]) + "/10\nInebriation: " + str(player_stats[current_player - 1]["inebriation"]) + "/10"
-				die_button.text = "Pay $10"
 			else:
-				# go to jail
-				die_button.text = "<$10, Jail"
-		await get_tree().create_timer(2).timeout
-			
-	elif dark_alleyway_spaces.has(player_stats[player - 1]["space"]):
-		print(player_piece_names[player] + " landed on Dark Alleyway")
-	elif heist_spaces.has(player_stats[player - 1]["space"]):
-		print(player_piece_names[player] + " landed on Heist")
-	elif npc_spaces.has(player_stats[player - 1]["space"]):
-		print(player_piece_names[player] + " landed on NPC")
-	elif player_stats[player - 1]["space"] == 2:
-		print(player_piece_names[player] + " landed on Unemployment Tax")
-	elif player_stats[player - 1]["space"] == 7:
-		print(player_piece_names[player] + " landed on Casino")
-	elif player_stats[player - 1]["space"] == 21:
-		print(player_piece_names[player] + " landed on Bar")
-		if player_stats[player - 1]["money"] >= 2:
-			player_stats[player - 1]["money"] -= 2
-		player_stats[player - 1]["inebriation"] += 3
-		if player_stats[player - 1]["inebriation"] >= 10:
-			eliminate_player(player)
-			return
+				imprison(player)
+		elif player_stats[player - 1]["space"] == 7:
+			print(player_piece_names[player] + " landed on Casino")
+		elif player_stats[player - 1]["space"] == 21:
+			print(player_piece_names[player] + " landed on Bar")
+			if player_stats[player - 1]["money"] >= 2:
+				player_stats[player - 1]["money"] -= 2
+			player_stats[player - 1]["inebriation"] += 3
+			if player_stats[player - 1]["inebriation"] >= 10:
+				eliminate_player(player)
+				return
+			else:
+				update_ui()
+				await get_tree().create_timer(1).timeout
+	
+	
+	
+	elif player_stats[player - 1]["jail"] > 0:
+		# Jail turn
+		die_button.text = "Roll Dice (" + str(player_stats[player - 1]["jail"]) + " turns left)"
+		purchase_sad_meal_button.disabled = true
+		eat_sad_meal_button.disabled = true
+		rhymes_with_grug_button.disabled = true
+		await(die_rolled)
+		die_button.disabled = true
+		for i in randi_range(6, 10):
+			die_roll_jail1 = randi_range(1, 6)
+			die_roll_jail2 = randi_range(1, 6)
+			die_button.text = str(die_roll_jail1) + " " + str(die_roll_jail2)
+			await get_tree().create_timer(0.2).timeout
+		await get_tree().create_timer(0.5).timeout
+		if die_roll_jail1 == die_roll_jail2:
+			player_stats[player - 1]["jail"] = -1
+			die_button.text = "Doubles! Released!"
+			get_node(player_piece_names[player]).global_position = get_node("BoardSpaces/Space14").global_position
+			player_stats[player - 1]["space"] = 14
+			await get_tree().create_timer(0.6).timeout
+			await(game_turn(player))
 		else:
-			update_ui()
-			await get_tree().create_timer(1).timeout
+			die_button.text = "Failed doubles!"
+			player_stats[player - 1]["jail"] -= 1
+			await get_tree().create_timer(0.7).timeout
+			if player_stats[player - 1]["jail"] == 0:
+				die_button.text = "Served jail time"
+				player_stats[player - 1]["jail"] = -1
+				get_node(player_piece_names[player]).global_position = get_node("BoardSpaces/Space14").global_position
+				player_stats[player - 1]["space"] = 14
+				await get_tree().create_timer(0.5).timeout
+				await(game_turn(player))
 
-func update_ui():
+func update_ui() -> void:
 	status_label.text = player_piece_names[current_player] + " - $" + str(player_stats[current_player - 1]["money"]) + "\nHunger: " + str(player_stats[current_player - 1]["hunger"]) + "/10\nInebriation: " + str(player_stats[current_player - 1]["inebriation"]) + "/10"
 	# haha funny small text difference
 	if player_stats[current_player - 1]["inebriation"] >= 4:
@@ -183,7 +281,7 @@ func update_ui():
 	else:
 		rhymes_with_grug_button.disabled = false
 
-func move_player_spaces(player : int, spaces : int):
+func move_player_spaces(player : int, spaces : int) -> void:
 	if spaces > 0:
 		for i in spaces:
 			player_stats[player - 1]["space"] += 1
@@ -199,10 +297,16 @@ func move_player_spaces(player : int, spaces : int):
 			get_node(player_piece_names[player]).global_position = get_node("BoardSpaces/Space" + str(player_stats[player - 1]["space"])).global_position
 			await get_tree().create_timer(0.5).timeout
 
-func eliminate_player(player):
+func eliminate_player(player) -> void:
 	player_stats[player - 1]["alive"] = false
 	get_node(player_piece_names[player]).visible = false
+	living_humans -= 1
 	print(player_piece_names[player] + " died!")
+
+func imprison(player) -> void:
+	player_stats[player - 1]["jail"] = 3
+	get_node(player_piece_names[player]).global_position = get_node("BoardSpaces/Jail").global_position
+	print(player_piece_names[player] + " was sent to jail!")
 
 func _on_dice_roll_button_pressed() -> void:
 	emit_signal("die_rolled")
@@ -233,6 +337,11 @@ func _on_use_drug_pressed() -> void:
 			pass
 		update_ui()
 
+func _on_second_ui_button_1_pressed() -> void:
+	pass # Replace with function body.
+
+func _on_second_ui_button_2_pressed() -> void:
+	pass # Replace with function body.
 
 # Old, bad code because i forgot dictionaries exist
 ## Player 1
