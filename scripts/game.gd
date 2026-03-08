@@ -23,6 +23,8 @@ var living_humans : int = 4
 @onready var second_ui_text_label = $CanvasLayer/SpaceUI/VBoxContainer/PoorTextLabel
 @onready var second_ui_button1 = $CanvasLayer/SpaceUI/VBoxContainer/Button1
 @onready var second_ui_button2 = $CanvasLayer/SpaceUI/VBoxContainer/Button2
+signal second_ui_button
+var second_ui_last_pressed_button : int = 1
 
 # Turn logic
 var before_turn : bool = true
@@ -55,7 +57,7 @@ var dark_alleyway_cards : Array = [0, 0, 0, 0, 0, 1, 2, 2, 2, 1, 1, 1, 3, 3, 3, 
 var dark_alleyway_outcomes : Dictionary = {0: "Gain 1 Drug", 1: "Gain 1 Sad Meal", 2: "Gain 2 Drugs", 3: "Lose $1", 4: "Lose $5", 5: "Lose 1 Sad Meal", 6: "Lose 2 Drugs"}
 var dark_alleyway_card : int = 0
 
-var heist_cards : Array = [{"task": "Roll an odd number", "success": "Gain 3 Drugs", "fail": "Pay $2"}]
+var heist_card_text : Array = [{"task": "Roll an odd number", "success": "Gain 3 Drugs", "fail": "Pay $2"}, {"task": "Roll a 5 or 6", "success": "Gain $10", "fail": "Go to Jail"}]
 var heist_card : int = 0
 
 func _ready() -> void:
@@ -127,7 +129,8 @@ func game_turn(player):
 			die_button.text = str(die_roll)
 			await get_tree().create_timer(0.2).timeout
 		await get_tree().create_timer(0.5).timeout
-		await(move_player_spaces(player, 4))
+		await(move_player_spaces(player, randi_range(3, 4)))
+		
 		# Board Space Actions
 		if police_inspection_spaces.has(player_stats[player - 1]["space"]):
 			print(player_piece_names[player] + " landed on Police Inspection")
@@ -144,13 +147,13 @@ func game_turn(player):
 				die_button.text = "Safe"
 			elif die_roll == 2 or die_roll == 3:
 				if player_stats[player - 1]["drugs"] > 0:
-					# go to jail
+					imprison(player)
 					die_button.text = ">0 Drugs, Jail"
 				else:
 					die_button.text = "No Drugs, Safe"
 			elif die_roll == 4 or die_roll == 5:
 				if player_stats[player - 1]["inebriation"] >= 4:
-					# go to jail
+					imprison(player)
 					die_button.text = "Inebriated, Jail"
 				else:
 					move_player_spaces(player, -2)
@@ -158,12 +161,17 @@ func game_turn(player):
 			elif die_roll == 6:
 				if player_stats[player - 1]["money"] >= 10:
 					player_stats[player - 1]["money"] -= 10
-					status_label.text = player_piece_names[current_player] + " - $" + str(player_stats[current_player - 1]["money"]) + "\nHunger: " + str(player_stats[current_player - 1]["hunger"]) + "/10\nInebriation: " + str(player_stats[current_player - 1]["inebriation"]) + "/10"
+					status_label.text = (player_piece_names[current_player] +
+					" - $" + str(player_stats[current_player - 1]["money"]) +
+					"\nHunger: " + str(player_stats[current_player - 1]["hunger"]) +
+					"/10\nInebriation: " + str(player_stats[current_player - 1]["inebriation"]) + "/10")
 					die_button.text = "Pay $10"
 				else:
-					# go to jail
+					imprison(player)
 					die_button.text = "<$10, Jail"
 			await get_tree().create_timer(2).timeout
+			
+			
 		elif dark_alleyway_spaces.has(player_stats[player - 1]["space"]):
 			print(player_piece_names[player] + " landed on Dark Alleyway")
 			die_button.text = "Draw Card"
@@ -197,21 +205,40 @@ func game_turn(player):
 				player_stats[player - 1]["drugs"] -= 2
 				if player_stats[player - 1]["drugs"] < 0:
 					player_stats[player - 1]["drugs"] = 0
+					
+					
 		elif heist_spaces.has(player_stats[player - 1]["space"]):
 			print(player_piece_names[player] + " landed on Heist")
 			heist_card = randi_range(0, 9)
-			
+			heist_card = randi_range(0, 1)
+			second_ui_text_label.text = heist_card_text[heist_card]["task"] + "\nSuccess: " + heist_card_text[heist_card]["success"] + "\nFail: " + heist_card_text[heist_card]["fail"]
+			second_ui_button1.text = "Roll Die"
+			second_ui_button2.text = "Decline"
+			second_ui_button1.disabled = false
+			second_ui_button2.disabled = false
 			second_ui.visible = true
+			await(second_ui_button)
+			if second_ui_last_pressed_button == 1:
+				pass
+			else:
+				return
+			
 		elif npc_spaces.has(player_stats[player - 1]["space"]):
 			print(player_piece_names[player] + " landed on NPC")
+			
+			
 		elif player_stats[player - 1]["space"] == 2:
 			print(player_piece_names[player] + " landed on Unemployment Tax")
 			if player_stats[player - 1]["money"] >= 10:
 				player_stats[player - 1]["money"] -= 10
 			else:
 				imprison(player)
+			
+			
 		elif player_stats[player - 1]["space"] == 7:
 			print(player_piece_names[player] + " landed on Casino")
+			
+			
 		elif player_stats[player - 1]["space"] == 21:
 			print(player_piece_names[player] + " landed on Bar")
 			if player_stats[player - 1]["money"] >= 2:
@@ -260,7 +287,10 @@ func game_turn(player):
 				await(game_turn(player))
 
 func update_ui() -> void:
-	status_label.text = player_piece_names[current_player] + " - $" + str(player_stats[current_player - 1]["money"]) + "\nHunger: " + str(player_stats[current_player - 1]["hunger"]) + "/10\nInebriation: " + str(player_stats[current_player - 1]["inebriation"]) + "/10"
+	status_label.text = (player_piece_names[current_player] +
+	" - $" + str(player_stats[current_player - 1]["money"]) +
+	"\nHunger: " + str(player_stats[current_player - 1]["hunger"]) +
+	"/10\nInebriation: " + str(player_stats[current_player - 1]["inebriation"]) + "/10")
 	# haha funny small text difference
 	if player_stats[current_player - 1]["inebriation"] >= 4:
 		die_button.text = "Roll Dice"
@@ -297,13 +327,13 @@ func move_player_spaces(player : int, spaces : int) -> void:
 			get_node(player_piece_names[player]).global_position = get_node("BoardSpaces/Space" + str(player_stats[player - 1]["space"])).global_position
 			await get_tree().create_timer(0.5).timeout
 
-func eliminate_player(player) -> void:
+func eliminate_player(player : int) -> void:
 	player_stats[player - 1]["alive"] = false
 	get_node(player_piece_names[player]).visible = false
 	living_humans -= 1
 	print(player_piece_names[player] + " died!")
 
-func imprison(player) -> void:
+func imprison(player : int) -> void:
 	player_stats[player - 1]["jail"] = 3
 	get_node(player_piece_names[player]).global_position = get_node("BoardSpaces/Jail").global_position
 	print(player_piece_names[player] + " was sent to jail!")
@@ -333,92 +363,14 @@ func _on_use_drug_pressed() -> void:
 		player_stats[current_player - 1]["drugs"] -= 1
 		player_stats[current_player - 1]["inebriation"] += 3
 		if player_stats[current_player - 1]["inebriation"] > 10:
-			# eliminate player
-			pass
+			eliminate_player(current_player)
+			return
 		update_ui()
 
 func _on_second_ui_button_1_pressed() -> void:
-	pass # Replace with function body.
+	emit_signal("second_ui_button")
+	second_ui_last_pressed_button = 1
 
 func _on_second_ui_button_2_pressed() -> void:
-	pass # Replace with function body.
-
-# Old, bad code because i forgot dictionaries exist
-## Player 1
-#var player1_money : int = 10
-#var player1_hunger : int = 0
-#var player1_inebriation : int = 0
-#var player1_sadmeals : int = 1
-#var player1_drugs : int = 0
-#var player1_space : int = 0
-#
-## Player 2
-#var player2_money : int = 10
-#var player2_hunger : int = 0
-#var player2_inebriation : int = 0
-#var player2_sadmeals : int = 1
-#var player2_drugs : int = 0
-#var player2_space : int = 0
-#
-## Player 3
-#var player3_money : int = 10
-#var player3_hunger : int = 0
-#var player3_inebriation : int = 0
-#var player3_sadmeals : int = 1
-#var player3_drugs : int = 0
-#var player3_space : int = 0
-#
-## Player 4
-#var player4_money : int = 10
-#var player4_hunger : int = 0
-#var player4_inebriation : int = 0
-#var player4_sadmeals : int = 1
-#var player4_drugs : int = 0
-#var player4_space : int = 0
-
-#func get_player_stat(stat : String, player : int):
-	#if stat == "money":
-		#if player == 1:
-			#return player1_money
-		#elif player == 2:
-			#return player2_money
-		#elif player == 3:
-			#return player3_money
-		#elif player == 4:
-			#return player4_money
-	#elif stat == "hunger":
-		#if player == 1:
-			#return player1_hunger
-		#elif player == 2:
-			#return player2_hunger
-		#elif player == 3:
-			#return player3_hunger
-		#elif player == 4:
-			#return player4_hunger
-	#elif stat == "inebriation":
-		#if player == 1:
-			#return player1_inebriation
-		#elif player == 2:
-			#return player2_inebriation
-		#elif player == 3:
-			#return player3_inebriation
-		#elif player == 4:
-			#return player4_inebriation
-	#elif stat == "sadmeals":
-		#if player == 1:
-			#return player1_sadmeals
-		#elif player == 2:
-			#return player2_sadmeals
-		#elif player == 3:
-			#return player3_sadmeals
-		#elif player == 4:
-			#return player4_sadmeals
-	#elif stat == "drugs":
-		#if player == 1:
-			#return player1_drugs
-		#elif player == 2:
-			#return player2_drugs
-		#elif player == 3:
-			#return player3_drugs
-		#elif player == 4:
-			#return player4_drugs
+	emit_signal("second_ui_button")
+	second_ui_last_pressed_button = 2
