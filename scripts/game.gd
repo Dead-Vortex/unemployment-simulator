@@ -17,6 +17,7 @@ var living_humans : int = 4
 @onready var purchase_sad_meal_button = $CanvasLayer/PanelContainer/VBoxContainer/BuySadMeal
 @onready var eat_sad_meal_button = $CanvasLayer/PanelContainer/VBoxContainer/SadMeal
 @onready var rhymes_with_grug_button = $CanvasLayer/PanelContainer/VBoxContainer/Drug # I have an idea!
+@onready var status_update = $CanvasLayer/StatusUpdate
 
 # Other shitty ui i needed for some bullshit
 @onready var second_ui = $CanvasLayer/SpaceUI
@@ -57,7 +58,18 @@ var dark_alleyway_cards : Array = [0, 0, 0, 0, 0, 1, 2, 2, 2, 1, 1, 1, 3, 3, 3, 
 var dark_alleyway_outcomes : Dictionary = {0: "Gain 1 Drug", 1: "Gain 1 Sad Meal", 2: "Gain 2 Drugs", 3: "Lose $1", 4: "Lose $5", 5: "Lose 1 Sad Meal", 6: "Lose 2 Drugs"}
 var dark_alleyway_card : int = 0
 
-var heist_card_text : Array = [{"task": "Roll an odd number", "success": "Gain 3 Drugs", "fail": "Pay $2"}, {"task": "Roll a 5 or 6", "success": "Gain $10", "fail": "Go to Jail"}]
+var heist_cards : Array = [
+	{"task": "Roll an odd number", "success": "Gain 3 Drugs", "fail": "Pay $2", "acceptable_rolls": [1, 3, 5], "success_prize": ["drugs", 3], "fail_penalty": ["money", -2]},
+	{"task": "Roll a 5 or 6", "success": "Gain $10", "fail": "Go to Jail", "acceptable_rolls": [5, 6], "success_prize": ["money", 10], "fail_penalty": ["jail"]},
+	{"task": "Roll an even number", "success": "Gain 2 Drugs", "fail": "Pay $1", "acceptable_rolls": [2, 4, 6], "success_prize": ["drugs", 2], "fail_penalty": ["money", -1]},
+	{"task": "Roll a 1", "success": "Gain 10 Sad Meals", "fail": "Pay $5", "acceptable_rolls": [1], "success_prize": ["sadmeals", 10], "fail_penalty": ["money", -5]},
+	{"task": "Roll a 2 or 3", "success": "Gain 2 Sad Meals", "fail": "Lose 2 Sad Meals", "acceptable_rolls": [2, 3], "success_prize": ["sadmeals", 2], "fail_penalty": ["sadmeals", -2]},
+	{"task": "Roll between 2-5", "success": "Gain $3", "fail": "Go to Jail", "acceptable_rolls": [2, 3, 4, 5], "success_prize": ["money", 3], "fail_penalty": ["jail"]},
+	{"task": "Roll an even number", "success": "Gain $4", "fail": "Go to Jail", "acceptable_rolls": [2, 4, 6], "success_prize": ["money", 4], "fail_penalty": ["jail"]},
+	{"task": "Roll an odd number", "success": "Gain $2", "fail": "Move back 2 spaces", "acceptable_rolls": [1, 3, 5], "success_prize": ["money", 2], "fail_penalty": ["spaces", -2]},
+	{"task": "Roll an even number", "success": "Gain 4 Drugs", "fail": "Pay $6", "acceptable_rolls": [2, 4, 6], "success_prize": ["drugs", 4], "fail_penalty": ["money", -6]},
+	{"task": "Roll a 1 or 2", "success": "Gain $4", "fail": "Go to Jail", "acceptable_rolls": [1, 2], "success_prize": ["money", 4], "fail_penalty": ["jail"]},
+]
 var heist_card : int = 0
 
 func _ready() -> void:
@@ -73,6 +85,7 @@ func _ready() -> void:
 	if player_stats[3]["alive"] == false:
 		player4.visible = false
 		living_humans -= 1
+	status_message("Arrow Keys to move camera")
 	while living_humans > 1:
 		if player_stats[0]["alive"] == true:
 			await(game_turn(1))
@@ -82,6 +95,18 @@ func _ready() -> void:
 			await(game_turn(3))
 		if player_stats[3]["alive"] == true:
 			await(game_turn(4))
+	if player_stats[0]["alive"] == true:
+		print("Goat wins the game!")
+		status_message("Goat wins the game!")
+	if player_stats[1]["alive"] == true:
+		print("Bag wins the game!")
+		status_message("Bag wins the game!")
+	if player_stats[2]["alive"] == true:
+		print("Cards wins the game!")
+		status_message("Cards wins the game!")
+	if player_stats[3]["alive"] == true:
+		print("Milk wins the game!")
+		status_message("Milk wins the game!")
 
 func _process(delta: float) -> void:
 	# Camera controls
@@ -129,11 +154,12 @@ func game_turn(player):
 			die_button.text = str(die_roll)
 			await get_tree().create_timer(0.2).timeout
 		await get_tree().create_timer(0.5).timeout
-		await(move_player_spaces(player, randi_range(3, 4)))
+		await(move_player_spaces(player, die_roll))
 		
 		# Board Space Actions
 		if police_inspection_spaces.has(player_stats[player - 1]["space"]):
 			print(player_piece_names[player] + " landed on Police Inspection")
+			status_message((player_piece_names[player] + " landed on Police Inspection"))
 			die_button.text = "Roll Die (Police)"
 			die_button.disabled = false
 			await(die_rolled)
@@ -174,6 +200,7 @@ func game_turn(player):
 			
 		elif dark_alleyway_spaces.has(player_stats[player - 1]["space"]):
 			print(player_piece_names[player] + " landed on Dark Alleyway")
+			status_message((player_piece_names[player] + " landed on Dark Alleyway"))
 			die_button.text = "Draw Card"
 			die_button.disabled = false
 			await(die_rolled)
@@ -209,9 +236,9 @@ func game_turn(player):
 					
 		elif heist_spaces.has(player_stats[player - 1]["space"]):
 			print(player_piece_names[player] + " landed on Heist")
+			status_message((player_piece_names[player] + " landed on Heist"))
 			heist_card = randi_range(0, 9)
-			heist_card = randi_range(0, 1)
-			second_ui_text_label.text = heist_card_text[heist_card]["task"] + "\nSuccess: " + heist_card_text[heist_card]["success"] + "\nFail: " + heist_card_text[heist_card]["fail"]
+			second_ui_text_label.text = heist_cards[heist_card]["task"] + "\nSuccess: " + heist_cards[heist_card]["success"] + "\nFail: " + heist_cards[heist_card]["fail"]
 			second_ui_button1.text = "Roll Die"
 			second_ui_button2.text = "Decline"
 			second_ui_button1.disabled = false
@@ -219,16 +246,71 @@ func game_turn(player):
 			second_ui.visible = true
 			await(second_ui_button)
 			if second_ui_last_pressed_button == 1:
-				pass
-			else:
-				return
+				second_ui_button1.disabled = true
+				second_ui_button2.disabled = true
+				for i in randi_range(6, 10):
+					die_roll = randi_range(1, 6)
+					second_ui_button1.text = str(die_roll)
+					await get_tree().create_timer(0.2).timeout
+				await get_tree().create_timer(0.5).timeout
+				if heist_cards[heist_card]["acceptable_rolls"].has(die_roll):
+					second_ui_button1.text = "Success!"
+					player_stats[player - 1][heist_cards[heist_card]["success_prize"][0]] += heist_cards[heist_card]["success_prize"][1]
+				elif heist_cards[heist_card]["fail_penalty"][0] == "jail":
+					second_ui_button1.text = "Failed!"
+					imprison(player)
+				elif heist_cards[heist_card]["fail_penalty"][0] == "spaces":
+					second_ui_button1.text = "Failed!"
+					await(move_player_spaces(player, heist_cards[heist_card]["fail_penalty"][1]))
+				else:
+					second_ui_button1.text = "Failed!"
+					player_stats[player - 1][heist_cards[heist_card]["fail_penalty"][0]] += heist_cards[heist_card]["fail_penalty"][1]
+				if player_stats[player - 1]["sadmeals"] < 0:
+					player_stats[player - 1]["sadmeals"] = 0
+				if player_stats[player - 1]["drugs"] < 0:
+					player_stats[player - 1]["drugs"] = 0
+				if player_stats[player - 1]["money"] < 0:
+					player_stats[player - 1]["money"] = 0
+				status_label.text = (player_piece_names[current_player] +
+				" - $" + str(player_stats[current_player - 1]["money"]) +
+				"\nHunger: " + str(player_stats[current_player - 1]["hunger"]) +
+				"/10\nInebriation: " + str(player_stats[current_player - 1]["inebriation"]) + "/10")
+				eat_sad_meal_button.text = "Consume a Sad Meal™️ (" + str(player_stats[current_player - 1]["sadmeals"]) + ")"
+				rhymes_with_grug_button.text = "Consume a Drug (" + str(player_stats[current_player - 1]["drugs"]) + ")"
+				await get_tree().create_timer(2).timeout
+			second_ui.visible = false
+			
 			
 		elif npc_spaces.has(player_stats[player - 1]["space"]):
 			print(player_piece_names[player] + " landed on NPC")
-			
+			status_message((player_piece_names[player] + " landed on NPC"))
+			second_ui_text_label.text = "Sell Drugs for $1"
+			second_ui_button1.text = "Sell 1 Drug"
+			second_ui_button2.text = "Done"
+			second_ui_button1.disabled = false
+			second_ui_button2.disabled = false
+			second_ui_last_pressed_button = 1
+			second_ui.visible = true
+			while second_ui_last_pressed_button == 1:
+				if player_stats[player - 1]["drugs"] <= 0:
+					second_ui_button1.disabled = true
+				await(second_ui_button)
+				if second_ui_last_pressed_button == 1:
+					player_stats[player - 1]["drugs"] -= 1
+					player_stats[player - 1]["money"] += 1
+					status_label.text = (player_piece_names[current_player] +
+					" - $" + str(player_stats[current_player - 1]["money"]) +
+					"\nHunger: " + str(player_stats[current_player - 1]["hunger"]) +
+					"/10\nInebriation: " + str(player_stats[current_player - 1]["inebriation"]) + "/10")
+					rhymes_with_grug_button.text = "Consume a Drug (" + str(player_stats[current_player - 1]["drugs"]) + ")"
+				else:
+					break
+			second_ui.visible = false
+
 			
 		elif player_stats[player - 1]["space"] == 2:
 			print(player_piece_names[player] + " landed on Unemployment Tax")
+			status_message((player_piece_names[player] + " landed on Unemployment Tax"))
 			if player_stats[player - 1]["money"] >= 10:
 				player_stats[player - 1]["money"] -= 10
 			else:
@@ -237,10 +319,11 @@ func game_turn(player):
 			
 		elif player_stats[player - 1]["space"] == 7:
 			print(player_piece_names[player] + " landed on Casino")
-			
+			status_message((player_piece_names[player] + " landed on Casino"))
 			
 		elif player_stats[player - 1]["space"] == 21:
 			print(player_piece_names[player] + " landed on Bar")
+			status_message((player_piece_names[player] + " landed on Bar"))
 			if player_stats[player - 1]["money"] >= 2:
 				player_stats[player - 1]["money"] -= 2
 			player_stats[player - 1]["inebriation"] += 3
@@ -332,11 +415,19 @@ func eliminate_player(player : int) -> void:
 	get_node(player_piece_names[player]).visible = false
 	living_humans -= 1
 	print(player_piece_names[player] + " died!")
+	status_message((player_piece_names[player] + " died!"))
 
 func imprison(player : int) -> void:
 	player_stats[player - 1]["jail"] = 3
 	get_node(player_piece_names[player]).global_position = get_node("BoardSpaces/Jail").global_position
 	print(player_piece_names[player] + " was sent to jail!")
+	status_message((player_piece_names[player] + " was sent to jail!"))
+
+func status_message(message : String):
+	status_update.text = message
+	status_update.visible = true
+	await get_tree().create_timer(float(message.length()) / 10).timeout
+	status_update.visible = false
 
 func _on_dice_roll_button_pressed() -> void:
 	emit_signal("die_rolled")
@@ -368,9 +459,9 @@ func _on_use_drug_pressed() -> void:
 		update_ui()
 
 func _on_second_ui_button_1_pressed() -> void:
-	emit_signal("second_ui_button")
 	second_ui_last_pressed_button = 1
+	emit_signal("second_ui_button")
 
 func _on_second_ui_button_2_pressed() -> void:
-	emit_signal("second_ui_button")
 	second_ui_last_pressed_button = 2
+	emit_signal("second_ui_button")

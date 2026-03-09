@@ -245,6 +245,17 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 30
 text = "Some other action"
 
+[node name="StatusUpdate" type="RichTextLabel" parent="CanvasLayer"]
+visible = false
+offset_right = 1920.0
+offset_bottom = 80.0
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 12
+theme_override_font_sizes/normal_font_size = 60
+text = "This is the default status message in this textbox."
+fit_content = true
+horizontal_alignment = 1
+
 [connection signal="pressed" from="CanvasLayer/PanelContainer/VBoxContainer/Dice" to="." method="_on_dice_roll_button_pressed"]
 [connection signal="pressed" from="CanvasLayer/PanelContainer/VBoxContainer/BuySadMeal" to="." method="_on_buy_sad_meal_button_pressed"]
 [connection signal="pressed" from="CanvasLayer/PanelContainer/VBoxContainer/SadMeal" to="." method="_on_eat_sad_meal_pressed"]
